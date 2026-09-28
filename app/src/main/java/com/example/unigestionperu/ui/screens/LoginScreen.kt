@@ -8,15 +8,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.unigestionperu.model.RolUsuario
 import com.example.unigestionperu.ui.components.AppLogo
 import com.example.unigestionperu.viewmodel.AuthViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    viewModel: AuthViewModel = viewModel()
+    onNavigateToRegister: () -> Unit,
+    viewModel: AuthViewModel
 ) {
     val state = viewModel.uiState
 
@@ -27,7 +30,6 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Logo en el Login
         AppLogo(modifier = Modifier.size(100.dp))
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -37,13 +39,52 @@ fun LoginScreen(
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 24.dp)
         )
+
+        Text(
+            text = "Selecciona tu rol:",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .align(Alignment.Start)
+                .padding(bottom = 8.dp)
+        )
+
+        val roles = listOf(
+            RolUsuario.ESTUDIANTE to "Estudiante",
+            RolUsuario.DOCENTE to "Docente",
+            RolUsuario.ADMINISTRATIVO to "Administrativo"
+        )
+
+        SingleChoiceSegmentedButtonRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+        ) {
+            roles.forEachIndexed { index, (rol, label) ->
+                SegmentedButton(
+                    selected = viewModel.selectedRol == rol,
+                    onClick = { viewModel.selectRol(rol) },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = roles.size
+                    )
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
 
         OutlinedTextField(
             value = viewModel.username,
             onValueChange = { viewModel.username = it },
-            label = { Text("Usuario") },
+            label = { Text("Usuario o Correo") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -61,6 +102,7 @@ fun LoginScreen(
             Text(
                 text = it,
                 color = Color.Red,
+                style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
@@ -81,11 +123,24 @@ fun LoginScreen(
                 Text("Iniciar Sesión")
             }
         }
+
+        TextButton(
+            onClick = onNavigateToRegister,
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("¿No tienes una cuenta? Regístrate aquí")
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         
+        val credencialesHint = when (viewModel.selectedRol) {
+            RolUsuario.ESTUDIANTE -> "Credenciales por defecto: estudiante / estudiante"
+            RolUsuario.DOCENTE -> "Credenciales por defecto: docente / docente"
+            RolUsuario.ADMINISTRATIVO -> "Credenciales por defecto: admin / admin"
+        }
+
         Text(
-            text = "Credenciales: estudiante / estudiante",
+            text = credencialesHint,
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
         )
