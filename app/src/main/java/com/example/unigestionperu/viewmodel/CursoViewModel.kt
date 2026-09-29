@@ -43,7 +43,7 @@ class CursoViewModel(application: Application) : AndroidViewModel(application) {
 
     // Flow con los IDs de cursos en los que el alumno actual está matriculado
     private val _usuarioId = MutableStateFlow(1) // Por defecto ID 1 (Juan Perez / estudiante)
-    
+
     val matriculasDelUsuario: StateFlow<List<MatriculaEntity>> = _usuarioId
         .combine(repository.todosLosCursos) { usuarioId, _ -> usuarioId }
         .combine(repository.getMatriculasDelUsuario(1)) { _, matriculas -> matriculas }

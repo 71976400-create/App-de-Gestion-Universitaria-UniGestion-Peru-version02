@@ -8,141 +8,115 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.unigestionperu.model.RolUsuario
 import com.example.unigestionperu.ui.components.AppLogo
 import com.example.unigestionperu.viewmodel.AuthViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    viewModel: AuthViewModel
+    viewModel: AuthViewModel,
 ) {
     val state = viewModel.uiState
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
     ) {
-        AppLogo(modifier = Modifier.size(100.dp))
-        
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "UNIGESTIÓN PERÚ",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
-
-        Text(
-            text = "Selecciona tu rol:",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onBackground,
+        Column(
             modifier = Modifier
-                .align(Alignment.Start)
-                .padding(bottom = 8.dp)
-        )
-
-        val roles = listOf(
-            RolUsuario.ESTUDIANTE to "Estudiante",
-            RolUsuario.DOCENTE to "Docente",
-            RolUsuario.ADMINISTRATIVO to "Administrativo"
-        )
-
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp)
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            roles.forEachIndexed { index, (rol, label) ->
-                SegmentedButton(
-                    selected = viewModel.selectedRol == rol,
-                    onClick = { viewModel.selectRol(rol) },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = roles.size
+            AppLogo(modifier = Modifier.size(100.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "UNIGESTIÓN PERÚ",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+
+            Text(
+                text = "Portal del Alumno — Huancayo",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                modifier = Modifier.padding(bottom = 32.dp),
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    OutlinedTextField(
+                        value = viewModel.username,
+                        onValueChange = { viewModel.username = it },
+                        label = { Text("Usuario o Correo Institucional") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                     )
-                ) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = viewModel.password,
+                        onValueChange = { viewModel.password = it },
+                        label = { Text("Contraseña") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                     )
+
+                    state.error?.let {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = { viewModel.onLoginClick(onLoginSuccess) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        enabled = !state.isLoading,
+                    ) {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        } else {
+                            Text("Iniciar Sesión", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
-        }
 
-        OutlinedTextField(
-            value = viewModel.username,
-            onValueChange = { viewModel.username = it },
-            label = { Text("Usuario o Correo") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
+            TextButton(onClick = onNavigateToRegister) {
+                Text("¿No tienes cuenta de alumno? Regístrate aquí", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+            }
 
-        OutlinedTextField(
-            value = viewModel.password,
-            onValueChange = { viewModel.password = it },
-            label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
+            Spacer(modifier = Modifier.height(8.dp))
 
-        state.error?.let {
             Text(
-                text = it,
-                color = Color.Red,
+                text = "Credenciales demo: estudiante / estudiante",
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
+                color = Color.Gray,
             )
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = { viewModel.onLoginClick(onLoginSuccess) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isLoading
-        ) {
-            if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text("Iniciar Sesión")
-            }
-        }
-
-        TextButton(
-            onClick = onNavigateToRegister,
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text("¿No tienes una cuenta? Regístrate aquí")
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        val credencialesHint = when (viewModel.selectedRol) {
-            RolUsuario.ESTUDIANTE -> "Credenciales por defecto: estudiante / estudiante"
-            RolUsuario.DOCENTE -> "Credenciales por defecto: docente / docente"
-            RolUsuario.ADMINISTRATIVO -> "Credenciales por defecto: admin / admin"
-        }
-
-        Text(
-            text = credencialesHint,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
-        )
     }
 }

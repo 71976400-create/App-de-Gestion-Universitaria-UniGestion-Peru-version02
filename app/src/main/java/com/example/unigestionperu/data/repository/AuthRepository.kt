@@ -20,6 +20,8 @@ class AuthRepository(private val usuarioDao: UsuarioDao) {
             nombreCompleto = entity.nombre,
             rol = rolEnum,
             correo = entity.correo,
+            facultad = entity.facultad,
+            ciclo = entity.ciclo,
         )
     }
 
@@ -36,6 +38,8 @@ class AuthRepository(private val usuarioDao: UsuarioDao) {
             nombreCompleto = entity.nombre,
             rol = rolEnum,
             correo = entity.correo,
+            facultad = entity.facultad,
+            ciclo = entity.ciclo,
         )
     }
 
@@ -45,6 +49,8 @@ class AuthRepository(private val usuarioDao: UsuarioDao) {
         clave: String,
         rol: String,
         username: String,
+        facultad: String,
+        ciclo: String,
     ): Result<UsuarioEntity> {
         val existente = usuarioDao.findByUsernameOrCorreo(username, correo)
         if (existente != null) {
@@ -56,6 +62,8 @@ class AuthRepository(private val usuarioDao: UsuarioDao) {
             clave = clave,
             rol = rol,
             username = username,
+            facultad = facultad,
+            ciclo = ciclo,
         )
         val id = usuarioDao.insert(nuevo)
         return Result.success(nuevo.copy(id = id.toInt()))

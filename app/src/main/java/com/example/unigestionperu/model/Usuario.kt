@@ -5,5 +5,7 @@ data class Usuario(
     val username: String,
     val nombreCompleto: String,
     val rol: RolUsuario,
-    val correo: String = ""
+    val correo: String = "",
+    val facultad: String = "Ingeniería",
+    val ciclo: String = "2026-I",
 )

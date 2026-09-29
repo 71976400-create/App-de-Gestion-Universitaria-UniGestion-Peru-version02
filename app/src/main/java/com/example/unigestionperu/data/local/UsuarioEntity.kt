@@ -10,6 +10,8 @@ data class UsuarioEntity(
     val nombre: String,
     val correo: String,
     val clave: String,
-    val rol: String, // "ESTUDIANTE", "DOCENTE", "ADMINISTRATIVO"
-    val username: String = ""
+    val rol: String, // "ESTUDIANTE"
+    val username: String = "",
+    val facultad: String = "Ingeniería",
+    val ciclo: String = "2026-I",
 )

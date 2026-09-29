@@ -24,36 +24,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     var uiState by mutableStateOf(AuthUiState())
         private set
 
-    var selectedRol by mutableStateOf(RolUsuario.ESTUDIANTE)
     var username by mutableStateOf("estudiante")
     var password by mutableStateOf("estudiante")
 
-    // Campos para la pantalla de registro
+    // Campos para la pantalla de registro de alumno
     var regNombre by mutableStateOf("")
     var regCorreo by mutableStateOf("")
     var regUsername by mutableStateOf("")
     var regClave by mutableStateOf("")
-    var regRol by mutableStateOf(RolUsuario.ESTUDIANTE)
+    var regFacultad by mutableStateOf("Ingeniería")
+    var regCiclo by mutableStateOf("2026-I")
     var regMensajeError by mutableStateOf<String?>(null)
     var regMensajeExito by mutableStateOf<String?>(null)
-
-    fun selectRol(rol: RolUsuario) {
-        selectedRol = rol
-        when (rol) {
-            RolUsuario.ESTUDIANTE -> {
-                username = "estudiante"
-                password = "estudiante"
-            }
-            RolUsuario.DOCENTE -> {
-                username = "docente"
-                password = "docente"
-            }
-            RolUsuario.ADMINISTRATIVO -> {
-                username = "admin"
-                password = "admin"
-            }
-        }
-    }
 
     fun cargarUsuarioPorId(id: Int) {
         viewModelScope.launch {
@@ -103,13 +85,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 nombre = regNombre,
                 correo = regCorreo,
                 clave = regClave,
-                rol = regRol.name,
+                rol = RolUsuario.ESTUDIANTE.name,
                 username = regUsername,
+                facultad = regFacultad,
+                ciclo = regCiclo,
             )
 
             result.onSuccess {
                 regMensajeExito = "Registro exitoso. ¡Ahora puedes iniciar sesión!"
-                // Limpiar campos
                 regNombre = ""
                 regCorreo = ""
                 regUsername = ""

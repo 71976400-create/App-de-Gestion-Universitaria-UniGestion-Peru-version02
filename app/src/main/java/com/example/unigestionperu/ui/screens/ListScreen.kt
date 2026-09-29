@@ -1,9 +1,11 @@
 package com.example.unigestionperu.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FilterList
@@ -36,6 +38,16 @@ fun ListScreen(
 
     val matriculadosIds = remember(matriculas) { matriculas.map { it.cursoId }.toSet() }
 
+    // Conteo de filtros activos para el Badge
+    val activeFiltersCount = remember(viewModel.facultadFiltro, viewModel.cicloFiltro, viewModel.modalidadFiltro, viewModel.busquedaQuery) {
+        var count = 0
+        if (viewModel.facultadFiltro != "Todas") count++
+        if (viewModel.cicloFiltro != "Todos") count++
+        if (viewModel.modalidadFiltro != "Todas") count++
+        if (viewModel.busquedaQuery.isNotBlank()) count++
+        count
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -49,7 +61,7 @@ fun ListScreen(
             OutlinedTextField(
                 value = viewModel.busquedaQuery,
                 onValueChange = { viewModel.onBusquedaChange(it) },
-                placeholder = { Text("Buscar asignatura...") },
+                placeholder = { Text("Buscar asignatura o docente...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (viewModel.busquedaQuery.isNotEmpty()) {
@@ -73,18 +85,71 @@ fun ListScreen(
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            FilledTonalIconButton(
-                onClick = { mostrarFiltros = !mostrarFiltros },
+            // Botón de Filtros con Badge Numérico de Filtros Activos
+            BadgedBox(
+                badge = {
+                    if (activeFiltersCount > 0) {
+                        Badge { Text("$activeFiltersCount") }
+                    }
+                },
             ) {
-                Icon(
-                    Icons.Default.FilterList,
-                    contentDescription = "Filtros",
-                    tint = if ((viewModel.facultadFiltro != "Todas") || (viewModel.cicloFiltro != "Todos") || (viewModel.modalidadFiltro != "Todas")) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        LocalContentColor.current
-                    },
-                )
+                FilledTonalIconButton(
+                    onClick = { mostrarFiltros = !mostrarFiltros },
+                ) {
+                    Icon(
+                        Icons.Default.FilterList,
+                        contentDescription = "Filtros",
+                        tint = if (activeFiltersCount > 0) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                    )
+                }
+            }
+        }
+
+        // Píldoras de Filtros Activos (Chips de acceso rápido)
+        if (activeFiltersCount > 0) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (viewModel.busquedaQuery.isNotBlank()) {
+                    InputChip(
+                        selected = true,
+                        onClick = { viewModel.onBusquedaChange("") },
+                        label = { Text("Búsqueda: '${viewModel.busquedaQuery}'") },
+                        trailingIcon = { Icon(Icons.Default.Clear, contentDescription = "Quitar", modifier = Modifier.size(16.dp)) },
+                    )
+                }
+                if (viewModel.facultadFiltro != "Todas") {
+                    InputChip(
+                        selected = true,
+                        onClick = { viewModel.onFacultadChange("Todas") },
+                        label = { Text("Facultad: ${viewModel.facultadFiltro}") },
+                        trailingIcon = { Icon(Icons.Default.Clear, contentDescription = "Quitar", modifier = Modifier.size(16.dp)) },
+                    )
+                }
+                if (viewModel.cicloFiltro != "Todos") {
+                    InputChip(
+                        selected = true,
+                        onClick = { viewModel.onCicloChange("Todos") },
+                        label = { Text("Ciclo: ${viewModel.cicloFiltro}") },
+                        trailingIcon = { Icon(Icons.Default.Clear, contentDescription = "Quitar", modifier = Modifier.size(16.dp)) },
+                    )
+                }
+                if (viewModel.modalidadFiltro != "Todas") {
+                    InputChip(
+                        selected = true,
+                        onClick = { viewModel.onModalidadChange("Todas") },
+                        label = { Text("Modalidad: ${viewModel.modalidadFiltro}") },
+                        trailingIcon = { Icon(Icons.Default.Clear, contentDescription = "Quitar", modifier = Modifier.size(16.dp)) },
+                    )
+                }
+                TextButton(onClick = { viewModel.resetFiltros() }) {
+                    Text("Limpiar filtros", style = MaterialTheme.typography.labelSmall)
+                }
             }
         }
 
@@ -108,7 +173,7 @@ fun ListScreen(
 
                     // Filtro de Facultad
                     FiltroDropdown(
-                        label = "Facultad",
+                        label = "Facultad / Escuela",
                         opciones = facultades,
                         seleccionado = viewModel.facultadFiltro,
                         onSelect = { viewModel.onFacultadChange(it) },
@@ -152,9 +217,9 @@ fun ListScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Conteo de Cursos encontrados utilizando usuarioId
+        // Conteo de Cursos encontrados
         Text(
-            text = "Usuario ID: $usuarioId | Mostrando ${cursos.size} asignaturas",
+            text = "Mostrando ${cursos.size} asignaturas disponibles",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             modifier = Modifier.padding(bottom = 8.dp),
@@ -168,13 +233,29 @@ fun ListScreen(
                     .weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        "No se encontraron cursos con los filtros aplicados",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium,
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(24.dp),
+                ) {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = null,
+                        modifier = Modifier.size(56.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "No se encontraron cursos con los filtros aplicados",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Prueba cambiando los criterios de búsqueda, facultad, ciclo o modalidad.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { viewModel.resetFiltros() }) {
                         Text("Ver todos los cursos")
                     }
@@ -182,7 +263,7 @@ fun ListScreen(
             }
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.weight(1f),
             ) {
                 items(
